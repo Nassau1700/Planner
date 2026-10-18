@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Planner</title>
+<style>
+:root{--bg:#e8ebef;--card:#fbfbf9;--ink:#1c2230;--mute:#667085;--line:#d8dce2;--accent:#c2410c;--fs:18px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1017;--card:#181d28;--ink:#eef0f4;--mute:#9aa3b2;--line:#2b3242}}
+:root[data-theme="dark"]{--bg:#0d1017;--card:#181d28;--ink:#eef0f4;--mute:#9aa3b2;--line:#2b3242}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--fs)/1.4 "Trebuchet MS","Segoe UI",system-ui,sans-serif;padding:14px;touch-action:manipulation}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:minmax(260px,5fr) 7fr;gap:14px}
+@media (max-width:760px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:10px;border:1px solid var(--line);padding:18px}
+.hero{text-align:center}
+.num{font-family:Georgia,"Times New Roman",serif;font-weight:700;color:var(--accent);font-size:16vw;line-height:.95}
+@media (min-width:1100px){.num{font-size:190px}}
+.wd{font-family:Georgia,serif;font-size:1.7em}
+.my{color:var(--mute)}
+.row{display:flex;justify-content:center;margin-top:10px;flex-wrap:wrap}.row>*{margin:4px}
+.btn{min-height:48px;padding:0 16px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.prog{height:10px;background:var(--line);border-radius:6px;margin-top:16px;overflow:hidden}
+.prog>i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.pt{color:var(--mute);font-size:.85em;margin-top:6px}
+h2{font-family:Georgia,serif;font-size:1.25em;margin:0 0 10px}
+.col{min-width:0}.col>.card{margin-bottom:14px}
+.item{display:flex;align-items:center;min-height:54px;border-top:1px solid var(--line)}.item>*{margin-right:8px}
+.item:first-of-type{border-top:none}
+.chk{width:30px;height:30px;flex:none;accent-color:var(--accent)}
+.txt{flex:1;min-width:0;border:none;background:none;padding:10px 4px;border-radius:6px}
+.txt:focus{background:var(--bg)}
+.done .txt{text-decoration:line-through;opacity:.45}
+.tm{width:78px;flex:none;border:none;background:none;color:var(--accent);font-weight:700;padding:10px 0}
+.tag{font-size:.7em;color:var(--mute);flex:none}
+.del{width:44px;height:44px;border:none;background:none;color:var(--mute);font-size:1.4em}
+.add{display:flex;margin-top:10px;flex-wrap:wrap}.add>*{margin:4px}
+.add input[type=text]{flex:1 1 160px;min-height:48px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.add select,.add input[type=time]{min-height:48px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+textarea{width:100%;min-height:130px;resize:vertical;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.empty{color:var(--mute);padding:8px 0}
+.set{display:grid;gap:12px}
+.set label{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px}
+.sw{display:flex}.sw button{margin-left:8px}
+.sw button{width:40px;height:40px;border-radius:50%;border:3px solid transparent}
+.sw button.on{border-color:var(--ink)}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="col">
+    <section class="card hero">
+      <div class="num" id="num"></div><div class="wd" id="wd"></div><div class="my" id="my"></div>
+      <div class="prog"><i id="bar"></i></div><div class="pt" id="pt"></div>
+      <div class="row">
+        <button class="btn" id="prev" type="button" aria-label="Previous day">‹ Prev</button>
+        <button class="btn pri" id="today" type="button">Today</button>
+        <button class="btn" id="next" type="button" aria-label="Next day">Next ›</button>
+        <button class="btn" id="jump" type="button">Pick date</button>
+        <input type="date" id="dp" class="hide" aria-label="Pick a date">
+      </div>
+    </section>
+    <section class="card" id="notesCard">
+      <h2>Notes for this day</h2>
+      <textarea id="notes" placeholder="Write anything about this day"></textarea>
+    </section>
+    <section class="card">
+      <h2>Settings</h2>
+      <div class="set">
+        <label>Accent <span class="sw" id="sw"></span></label>
+        <label>Theme <select id="theme" class="btn"><option value="auto">Match device</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+        <label>Text size <select id="size" class="btn"><option value="16">Small</option><option value="18">Medium</option><option value="22">Large</option><option value="26">Extra large</option></select></label>
+        <label>Show schedule <input class="chk" type="checkbox" id="showSched"></label>
+        <label>Show notes <input class="chk" type="checkbox" id="showNotes"></label>
+        <label>Keep screen awake <input class="chk" type="checkbox" id="awake"></label>
+        <div class="row" style="margin:0"><button class="btn" id="exp" type="button">Backup</button><button class="btn" id="imp" type="button">Restore</button></div>
+        <textarea id="bk" class="hide" aria-label="Backup data" style="min-height:90px"></textarea>
+        <button class="btn pri hide" id="bkgo" type="button">Restore from this text</button>
+      </div>
+    </section>
+  </div>
+  <div class="col">
+    <section class="card" id="schedCard">
+      <h2>Schedule</h2><div id="sched"></div>
+      <div class="add">
+        <input type="text" id="sText" placeholder="Event name" aria-label="Event name">
+        <input type="time" id="sTime" aria-label="Time">
+        <select id="sRep" aria-label="Repeat"><option value="none">Just this day</option><option value="daily">Every day</option><option value="every2">Every other day</option><option value="every3">Every 3 days</option><option value="weekdays">Weekdays</option><option value="weekly">Every week</option></select>
+        <button class="btn pri" id="sAdd" type="button">Add event</button>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Checklist</h2><div id="tasks"></div>
+      <div class="add">
+        <input type="text" id="tText" placeholder="New task" aria-label="New task">
+        <select id="tRep" aria-label="Repeat"><option value="none">Just this day</option><option value="daily">Every day</option><option value="every2">Every other day</option><option value="every3">Every 3 days</option><option value="weekdays">Weekdays</option><option value="weekly">Every week</option></select>
+        <button class="btn pri" id="tAdd" type="button">Add task</button>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+(function(){
+var K="daily-planner-v1",S={items:[],done:{},notes:{},set:{accent:"#c2410c",theme:"auto",size:"18",showSched:true,showNotes:true,awake:false}};
+try{var r=JSON.parse(localStorage.getItem(K)||"null");if(r&&typeof r==="object"){S.items=r.items||[];S.done=r.done||{};S.notes=r.notes||{};for(var k in r.set)S.set[k]=r.set[k]}}catch(e){}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+var $=function(i){return document.getElementById(i)};
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function pd(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2])}
+var view=iso(new Date()),last=view;
+function applies(e,ds){var d=pd(ds),s=pd(e.start);if(d<s)return false;
+ if(e.rep==="none")return e.start===ds;if(e.rep==="daily")return true;if(e.rep==="every2")return Math.round((d-s)/86400000)%2===0;if(e.rep==="every3")return Math.round((d-s)/86400000)%3===0;
+ if(e.rep==="weekdays")return d.getDay()>0&&d.getDay()<6;if(e.rep==="weekly")return d.getDay()===s.getDay();return false}
+var RL={none:"",daily:"daily",every2:"every other day",every3:"every 3 days",weekdays:"weekdays",weekly:"weekly"};
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function mk(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function row(it,isEvent){
+ var li=mk("div","item"+(!isEvent&&S.done[it.id+"|"+view]?" done":""));
+ if(isEvent){var tm=mk("input","tm");tm.type="time";tm.value=it.time||"";tm.setAttribute("aria-label","Time");tm.onchange=function(){it.time=tm.value;save();render()};li.appendChild(tm)}
+ else{var c=mk("input","chk");c.type="checkbox";c.checked=!!S.done[it.id+"|"+view];c.setAttribute("aria-label","Done");
+  c.onchange=function(){if(c.checked)S.done[it.id+"|"+view]=1;else delete S.done[it.id+"|"+view];save();render()};li.appendChild(c)}
+ var x=mk("input","txt");x.type="text";x.value=it.text;x.setAttribute("aria-label","Edit text");
+ x.onchange=function(){var v=x.value.trim();if(v){it.text=v;save()}else x.value=it.text};li.appendChild(x);
+ if(RL[it.rep])li.appendChild(mk("span","tag",RL[it.rep]));
+ var d=mk("button","del","×");d.type="button";d.setAttribute("aria-label","Delete "+it.text);
+ d.onclick=function(){S.items=S.items.filter(function(z){return z.id!==it.id});save();render()};li.appendChild(d);
+ return li}
+function render(){
+ var d=pd(view),now=new Date();
+ $("num").textContent=d.getDate();
+ $("wd").textContent=d.toLocaleDateString(undefined,{weekday:"long"});
+ $("my").textContent=d.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+ $("today").style.opacity=view===iso(now)?".5":"1";
+ var ev=S.items.filter(function(i){return i.kind==="event"&&applies(i,view)}).sort(function(a,b){return (a.time||"99").localeCompare(b.time||"99")});
+ var tk=S.items.filter(function(i){return i.kind==="task"&&applies(i,view)});
+ var sc=$("sched");sc.innerHTML="";if(!ev.length)sc.appendChild(mk("div","empty","No events today."));ev.forEach(function(i){sc.appendChild(row(i,true))});
+ var tc=$("tasks");tc.innerHTML="";if(!tk.length)tc.appendChild(mk("div","empty","No tasks yet. Add one below."));tk.forEach(function(i){tc.appendChild(row(i,false))});
+ var n=tk.filter(function(i){return S.done[i.id+"|"+view]}).length;
+ $("bar").style.width=tk.length?(n/tk.length*100)+"%":"0";
+ $("pt").textContent=tk.length?n+" of "+tk.length+" tasks done":"";
+ if(document.activeElement!==$("notes"))$("notes").value=S.notes[view]||"";
+ $("schedCard").classList.toggle("hide",!S.set.showSched);
+ $("notesCard").classList.toggle("hide",!S.set.showNotes)}
+function shift(n){var d=pd(view);d.setDate(d.getDate()+n);view=iso(d);render()}
+$("prev").onclick=function(){shift(-1)};$("next").onclick=function(){shift(1)};
+$("today").onclick=function(){view=iso(new Date());render()};
+$("jump").onclick=function(){var p=$("dp");p.value=view;try{p.showPicker()}catch(e){p.classList.remove("hide")}};
+$("dp").onchange=function(){if(this.value){view=this.value;render()}this.classList.add("hide")};
+$("notes").oninput=function(){var v=this.value;if(v)S.notes[view]=v;else delete S.notes[view];save()};
+function add(kind,tid,rid,timeId){var t=$(tid).value.trim();if(!t){$(tid).focus();return}
+ S.items.push({id:uid(),kind:kind,text:t,time:timeId?$(timeId).value:"",rep:$(rid).value,start:view});
+ save();$(tid).value="";if(timeId)$(timeId).value="";$(rid).value="none";render()}
+$("sAdd").onclick=function(){add("event","sText","sRep","sTime")};
+$("tAdd").onclick=function(){add("task","tText","tRep")};
+$("sText").onkeydown=function(e){if(e.key==="Enter")$("sAdd").click()};
+$("tText").onkeydown=function(e){if(e.key==="Enter")$("tAdd").click()};
+// settings
+var COL=["#c2410c","#0f766e","#1d4ed8","#a21caf","#be123c","#4d7c0f"];
+function applySet(){var r=document.documentElement;r.style.setProperty("--accent",S.set.accent);r.style.setProperty("--fs",S.set.size+"px");
+ if(S.set.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.set.theme);
+ $("theme").value=S.set.theme;$("size").value=S.set.size;$("showSched").checked=S.set.showSched;$("showNotes").checked=S.set.showNotes;$("awake").checked=S.set.awake;
+ [].forEach.call($("sw").children,function(b){b.classList.toggle("on",b.dataset.c===S.set.accent)})}
+COL.forEach(function(c){var b=mk("button");b.type="button";b.style.background=c;b.dataset.c=c;b.setAttribute("aria-label","Accent "+c);b.onclick=function(){S.set.accent=c;save();applySet()};$("sw").appendChild(b)});
+$("theme").onchange=function(){S.set.theme=this.value;save();applySet()};
+$("size").onchange=function(){S.set.size=this.value;save();applySet()};
+$("showSched").onchange=function(){S.set.showSched=this.checked;save();render()};
+$("showNotes").onchange=function(){S.set.showNotes=this.checked;save();render()};
+var wl=null;
+function wake(){if(!S.set.awake||!navigator.wakeLock||document.visibilityState!=="visible")return;navigator.wakeLock.request("screen").then(function(l){wl=l}).catch(function(){})}
+$("awake").onchange=function(){S.set.awake=this.checked;save();if(this.checked)wake();else if(wl){try{wl.release()}catch(e){}}};
+document.addEventListener("visibilitychange",wake);
+$("exp").onclick=function(){var b=$("bk");b.classList.remove("hide");b.value=JSON.stringify(S);b.select();$("bkgo").classList.add("hide");try{document.execCommand("copy")}catch(e){}};
+$("imp").onclick=function(){var b=$("bk");b.classList.remove("hide");b.value="";b.placeholder="Paste backup text here";$("bkgo").classList.remove("hide")};
+$("bkgo").onclick=function(){try{var r=JSON.parse($("bk").value);if(!r||!Array.isArray(r.items))throw 0;S.items=r.items;S.done=r.done||{};S.notes=r.notes||{};if(r.set)for(var k in r.set)S.set[k]=r.set[k];save();applySet();render();$("bk").classList.add("hide");$("bkgo").classList.add("hide")}catch(e){$("bk").value="";$("bk").placeholder="That text isn't a valid backup."}};
+// midnight rollover
+function tick(){var t=iso(new Date());if(t!==last){if(view===last)view=t;last=t;render()}}
+setInterval(tick,20000);
+applySet();render();wake();
+})();
+</script>
+</body>
+</html>
