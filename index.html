@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Family Calendar</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:#1d2230;background:#9db4c8 linear-gradient(160deg,#c9d9e6,#8fa9bf) center/cover fixed no-repeat;padding:14px;-webkit-text-size-adjust:100%;touch-action:manipulation}
+.page{max-width:820px;margin:0 auto}
+.head{text-align:center;padding:6px 0 12px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.55)}
+.md{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:11vw;line-height:1.05}
+.yr{font-family:Georgia,serif;font-size:6vw;margin-top:2px}
+.nav{margin-top:6px}
+.nav button{background:rgba(255,255,255,.85);border:none;border-radius:8px;min-height:44px;min-width:64px;font-size:18px;margin:0 4px;color:#1d2230}
+.grid{display:grid;grid-template-columns:1fr 1fr;grid-gap:12px}
+.card{background:rgba(255,255,255,.88);border-radius:14px;padding:14px;box-shadow:0 3px 12px rgba(0,0,0,.25);min-width:0}
+.card h2{margin:0 0 8px;font-family:Georgia,serif;font-size:21px}
+.full{grid-column:1/3}
+.wx{text-align:center;cursor:pointer}
+.wx .t{font-size:13vw;font-weight:700;line-height:1}
+.wx .i{font-size:9vw}
+.wx .c{font-size:15px;color:#555;margin-top:4px}
+.ph{text-align:center}
+.ph img{width:100%;height:auto;border-radius:12px;display:block}
+.ph .n{font-family:Georgia,serif;font-size:24px;font-weight:700;margin-top:6px}
+.two{display:flex}
+.two .ph{width:50%}
+.two .ph:first-child{padding-right:5px}
+.two .ph:last-child{padding-left:5px}
+.two .ph .n{font-size:19px}
+.one{width:62%;margin:0 auto}
+.item{display:flex;align-items:center;min-height:50px;border-top:1px solid #d9dde3}
+.item:first-of-type{border-top:none}
+.item>*{margin-right:8px}
+.item input[type=checkbox]{width:30px;height:30px;flex:none}
+.txt{flex:1;min-width:0;border:none;background:none;font:inherit;font-size:19px;padding:8px 2px;color:inherit}
+.done .txt{text-decoration:line-through;opacity:.45}
+.tag{font-size:12px;color:#666}
+.del{border:none;background:none;font-size:26px;color:#777;width:40px;height:44px}
+.add{display:flex;flex-wrap:wrap;margin-top:8px}
+.add>*{margin:3px}
+.add input[type=text]{flex:1 1 120px;min-height:44px;padding:0 10px;border:1px solid #c8cdd5;border-radius:8px;font:inherit;font-size:17px}
+.add select{min-height:44px;border:1px solid #c8cdd5;border-radius:8px;background:#fff;font:inherit;font-size:16px}
+.add button{min-height:44px;padding:0 16px;border:none;border-radius:8px;background:#c2410c;color:#fff;font:inherit;font-weight:700}
+.empty{color:#666;padding:6px 0}
+.prog{height:8px;background:#d9dde3;border-radius:5px;margin-bottom:8px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:#c2410c}
+textarea{width:100%;min-height:120px;border:1px solid #c8cdd5;border-radius:8px;padding:10px;font:inherit;font-size:18px;background:#fff;resize:vertical}
+@media (min-width:821px){.md{font-size:90px}.yr{font-size:46px}.wx .t{font-size:100px}.wx .i{font-size:70px}}
+body::before{content:"";position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.22);z-index:-1}
+.noimg{width:100%;background:#cfd8e3;border-radius:12px;font-size:20vw;line-height:1.5;color:#fff;font-family:Georgia,serif;font-weight:700}
+.hide{display:none}
+.btn{min-height:44px;padding:0 16px;border:1px solid #c8cdd5;border-radius:8px;background:#fff;font:inherit;font-size:17px;display:inline-flex;align-items:center;color:#1d2230}
+.pbar>*{margin:4px}
+.fi{position:absolute;left:-9999px}
+.note{color:#555;font-size:15px;margin:6px 0}
+.prow{display:flex;align-items:center;margin:8px 0}
+.prow img{width:56px;height:56px;border-radius:8px;object-fit:cover;margin-right:10px}
+.prow .nm{flex:1;font-size:19px}
+</style>
+</head>
+<body>
+<div class="page">
+ <div class="head">
+  <div class="md" id="md"></div><div class="yr" id="yr"></div>
+  <div class="nav"><button id="prev" type="button" aria-label="Previous day">‹</button><button id="today" type="button">Today</button><button id="next" type="button" aria-label="Next day">›</button></div>
+ </div>
+ <div class="grid">
+  <div class="card wx" id="wx" role="button" tabindex="0"><h2>Weather</h2><div class="t" id="wt">--°</div><div class="i" id="wi"></div><div class="c" id="wc">Tap to set your city</div></div>
+  <div class="card"><h2>Eats first</h2><div class="ph" id="eats"></div></div>
+  <div class="card"><h2>Showers</h2><div id="showers"></div></div>
+  <div class="card"><h2>Chore checklist</h2><div class="prog"><i id="bar"></i></div><div id="tasks"></div>
+   <div class="add"><input type="text" id="tText" placeholder="New chore" aria-label="New chore"><select id="tRep" aria-label="Repeat"><option value="none">Just this day</option><option value="daily">Every day</option><option value="every2">Every other day</option><option value="every3">Every 3 days</option><option value="weekdays">Weekdays</option><option value="weekly">Every week</option></select><button id="tAdd" type="button">Add</button></div></div>
+  <div class="card full"><h2>Notes</h2><textarea id="notes" placeholder="Notes for this day" aria-label="Notes"></textarea></div>
+  <div class="card full"><button class="btn" id="ptog" type="button">Photos</button>
+   <div id="pp" class="hide"><p class="note">Photos stay on this iPad. They are never uploaded to the website.</p>
+    <div id="prow"></div>
+    <h2>Background photos</h2>
+    <div class="pbar"><label class="btn">Add photos<input type="file" accept="image/*" multiple id="bgin" class="fi"></label><button class="btn" id="bgclr" type="button">Remove all</button></div>
+    <div class="note" id="bgst"></div></div></div>
+ </div>
+</div>
+<script>
+(function(){
+var PH={},BG=[],BGK=[];
+var ANCHOR=new Date(2026,9,22); // Oct 22, 2026: Lailah eats first, Titus showers
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+var K="family-calendar-v1",S={items:[],done:{},notes:{},city:null};
+try{var r=JSON.parse(localStorage.getItem(K)||"null");if(r&&typeof r==="object"){S.items=r.items||[];S.done=r.done||{};S.notes=r.notes||{};S.city=r.city||null}}catch(e){}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function mk(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function pd(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2])}
+function diff(a,b){return Math.round((a-b)/86400000)}
+var view=iso(new Date()),last=view;
+function applies(e,ds){var d=pd(ds),s=pd(e.start);if(d<s)return false;var n=diff(d,s);
+ if(e.rep==="none")return n===0;if(e.rep==="daily")return true;if(e.rep==="every2")return n%2===0;if(e.rep==="every3")return n%3===0;
+ if(e.rep==="weekdays")return d.getDay()>0&&d.getDay()<6;if(e.rep==="weekly")return n%7===0;return false}
+var RL={none:"",daily:"daily",every2:"every other day",every3:"every 3 days",weekdays:"weekdays",weekly:"weekly"};
+function photo(name){var p=mk("div","ph");
+ if(PH[name]){var im=mk("img");im.src=PH[name];im.alt=name;p.appendChild(im)}
+ else p.appendChild(mk("div","noimg",name.charAt(0)));
+ p.appendChild(mk("div","n",name));return p}
+function render(){
+ var d=pd(view),n=diff(d,ANCHOR),odd=((n%2)+2)%2===1;
+ $("md").textContent=MONTHS[d.getMonth()]+" "+d.getDate();$("yr").textContent=d.getFullYear();
+ $("today").style.opacity=view===iso(new Date())?".55":"1";
+ var eats=$("eats");eats.innerHTML="";eats.appendChild(photo(odd?"JC":"Lailah"));
+ var sh=$("showers");sh.innerHTML="";
+ if(odd){var w=mk("div","two");w.appendChild(photo("JC"));w.appendChild(photo("Lailah"));sh.appendChild(w)}
+ else{var o=mk("div","one");o.appendChild(photo("Titus"));sh.appendChild(o)}
+ var kid=["JC","Titus","Lailah"][((n%3)+3)%3];
+ var base=[["c1","Living room floor"],["c2","Living room cushions"],["c3","Kitchen countertops"],["c4","Trash"],["c5","Kitchen floors"],["c6","Upstairs bath"],["c7","Upstairs hall – "+kid],["c8","Stairs – "+kid]].map(function(a){return {id:a[0],text:a[1],rep:"none",fixed:true}});
+ var tk=base.concat(S.items.filter(function(i){return applies(i,view)})),tc=$("tasks");tc.innerHTML="";
+ if(!tk.length)tc.appendChild(mk("div","empty","No chores yet."));
+ var dn=0;
+ tk.forEach(function(it){var key=it.id+"|"+view,on=!!S.done[key];if(on)dn++;
+  var li=mk("div","item"+(on?" done":""));
+  var c=mk("input");c.type="checkbox";c.checked=on;c.setAttribute("aria-label","Done");
+  c.onchange=function(){if(c.checked)S.done[key]=1;else delete S.done[key];save();render()};li.appendChild(c);
+  if(it.fixed){li.appendChild(mk("div","txt",it.text))}
+  else{var x=mk("input","txt");x.type="text";x.value=it.text;x.setAttribute("aria-label","Edit chore");
+   x.onchange=function(){var v=x.value.trim();if(v){it.text=v;save()}else x.value=it.text};li.appendChild(x);
+   if(RL[it.rep])li.appendChild(mk("span","tag",RL[it.rep]));
+   var b=mk("button","del","×");b.type="button";b.setAttribute("aria-label","Delete "+it.text);
+   b.onclick=function(){S.items=S.items.filter(function(z){return z.id!==it.id});save();render()};li.appendChild(b)}
+  tc.appendChild(li)});
+ $("bar").style.width=tk.length?(dn/tk.length*100)+"%":"0";
+ if(document.activeElement!==$("notes"))$("notes").value=S.notes[view]||"";
+ if(BG.length){var h=0,s=view;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%100003;
+  document.body.style.backgroundImage="url("+BG[h%BG.length]+")"}}
+function shift(k){var d=pd(view);d.setDate(d.getDate()+k);view=iso(d);render()}
+$("prev").onclick=function(){shift(-1)};$("next").onclick=function(){shift(1)};
+$("today").onclick=function(){view=iso(new Date());render()};
+$("notes").oninput=function(){var v=this.value;if(v)S.notes[view]=v;else delete S.notes[view];save()};
+function add(){var t=$("tText").value.trim();if(!t){$("tText").focus();return}
+ S.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),text:t,rep:$("tRep").value,start:view});
+ save();$("tText").value="";$("tRep").value="none";render()}
+$("tAdd").onclick=add;$("tText").onkeydown=function(e){if(e.key==="Enter")add()};
+// weather (needs internet; uses open-meteo, no key)
+var ICON=function(c){if(c===0)return"☀️";if(c<=2)return"⛅";if(c===3)return"☁️";if(c<=48)return"🌫";if(c<=67)return"🌧";if(c<=77)return"❄️";if(c<=82)return"🌦";return"⛈"};
+function weather(){if(!S.city)return;
+ fetch("https://api.open-meteo.com/v1/forecast?latitude="+S.city.lat+"&longitude="+S.city.lon+"&current_weather=true&temperature_unit=fahrenheit&timezone=auto")
+ .then(function(r){return r.json()}).then(function(j){var c=j.current_weather;$("wt").textContent=Math.round(c.temperature)+"°";$("wi").textContent=ICON(c.weathercode);$("wc").textContent=S.city.name})
+ .catch(function(){$("wc").textContent=S.city.name+" (offline)"})}
+function setCity(){var q=window.prompt("Enter your city (for example: Nashville)");if(!q)return;
+ fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&name="+encodeURIComponent(q.trim())).then(function(r){return r.json()}).then(function(j){
+  if(!j.results||!j.results.length){window.alert("City not found. Try just the city name.");return}
+  var c=j.results[0];S.city={lat:c.latitude,lon:c.longitude,name:c.name+(c.admin1?", "+c.admin1:"")};save();weather()})
+ .catch(function(){window.alert("Couldn't reach the weather service. Check the internet connection.")})}
+$("wx").onclick=setCity;
+setInterval(function(){var t=iso(new Date());if(t!==last){if(view===last)view=t;last=t;render()}},20000);
+setInterval(weather,1800000);
+// photos live in this device's own storage (IndexedDB), never in the website files
+var db=null;
+function dbOpen(cb){try{var q=indexedDB.open("fcal",1);q.onupgradeneeded=function(){q.result.createObjectStore("kv",{keyPath:"k"})};q.onsuccess=function(){db=q.result;cb()};q.onerror=function(){cb()}}catch(e){cb()}}
+function dbPut(k,v,cb){if(!db){cb(false);return}var t=db.transaction("kv","readwrite");t.objectStore("kv").put({k:k,v:v});t.oncomplete=function(){cb(true)};t.onerror=function(){cb(false)}}
+function dbDel(k,cb){if(!db){cb();return}var t=db.transaction("kv","readwrite");t.objectStore("kv").delete(k);t.oncomplete=function(){cb()};t.onerror=function(){cb()}}
+function dbAll(cb){var out=[];if(!db){cb(out);return}var r=db.transaction("kv").objectStore("kv").openCursor();r.onsuccess=function(){var c=r.result;if(c){out.push(c.value);c["continue"]()}else cb(out)};r.onerror=function(){cb(out)}}
+function shrink(file,mode,cb){var u=URL.createObjectURL(file),im=new Image();
+ im.onload=function(){var w=im.naturalWidth,h=im.naturalHeight,c=document.createElement("canvas"),x=c.getContext("2d");
+  if(mode==="sq"){var s=Math.min(w,h);c.width=c.height=420;x.drawImage(im,(w-s)/2,(h-s)*0.2,s,s,0,0,420,420)}
+  else{var k=Math.min(1,900/Math.max(w,h));c.width=Math.round(w*k);c.height=Math.round(h*k);x.drawImage(im,0,0,c.width,c.height)}
+  URL.revokeObjectURL(u);cb(c.toDataURL("image/jpeg",mode==="sq"?0.8:0.65))};
+ im.onerror=function(){URL.revokeObjectURL(u);cb(null)};im.src=u}
+function status(){$("bgst").textContent=!db?"Photo storage isn't available in this browser.":BG.length+" background photo"+(BG.length===1?"":"s")+" saved. One is picked each day."}
+function panel(){var pr=$("prow");pr.innerHTML="";
+ ["Lailah","JC","Titus"].forEach(function(n){var r=mk("div","prow");
+  if(PH[n]){var im=mk("img");im.src=PH[n];im.alt=n;r.appendChild(im)}
+  r.appendChild(mk("div","nm",n));
+  var l=mk("label","btn",PH[n]?"Change":"Choose photo"),f=mk("input","fi");f.type="file";f.accept="image/*";
+  f.onchange=function(){if(!f.files||!f.files[0])return;shrink(f.files[0],"sq",function(d){if(!d)return;dbPut("p:"+n,d,function(ok){if(ok){PH[n]=d;panel();render()}})})};
+  l.appendChild(f);r.appendChild(l);pr.appendChild(r)});status()}
+$("ptog").onclick=function(){$("pp").classList.toggle("hide")};
+$("bgin").onchange=function(){var inp=this,fs=[].slice.call(inp.files||[]),i=0;
+ function next(){if(i>=fs.length){inp.value="";status();render();return}
+  $("bgst").textContent="Saving "+(i+1)+" of "+fs.length+"...";
+  shrink(fs[i],"bg",function(d){i++;if(!d){next();return}var k="b:"+Date.now()+"_"+i;dbPut(k,d,function(ok){if(ok){BG.push(d);BGK.push(k)}next()})})}
+ next()};
+$("bgclr").onclick=function(){if(!BGK.length||!window.confirm("Remove all background photos from this iPad?"))return;
+ var ks=BGK.slice();BG=[];BGK=[];document.body.style.backgroundImage="";
+ (function nx(){if(!ks.length){status();render();return}dbDel(ks.shift(),nx)})()};
+render();weather();
+dbOpen(function(){dbAll(function(rows){rows.forEach(function(r){if(r.k.indexOf("p:")===0)PH[r.k.slice(2)]=r.v;else if(r.k.indexOf("b:")===0){BG.push(r.v);BGK.push(r.k)}});panel();render()})});
+})();
+</script>
+</body>
+</html>
